@@ -1,6 +1,5 @@
 import pickle
 from flask import Flask, render_template, request, jsonify
-import numpy as np
 import pandas as pd
 
 app = Flask(__name__)
@@ -20,13 +19,24 @@ def home():
 def predict_api():
     data = request.json['data']
 
-    # Ensure correct feature order
     X = pd.DataFrame([data], columns=features)
-
     X_scaled = scaler.transform(X)
     prediction = model.predict(X_scaled)
 
     return jsonify(float(prediction[0]))
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = [float(x) for x in request.form.values()]
+
+    X = pd.DataFrame([data], columns=features)
+    X_scaled = scaler.transform(X)
+    prediction = model.predict(X_scaled)
+
+    return render_template(
+        'home.html',
+        prediction_text=f"The Predicted House Price is: ${prediction[0]:,.2f}"
+    )
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
